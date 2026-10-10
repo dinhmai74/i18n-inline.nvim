@@ -8,6 +8,7 @@ every option, how patterns work, and what the audit reports.
 - [Examples by stack](#examples-by-stack)
 - [Several translation directories](#several-translation-directories)
 - [All options](#all-options)
+- [Key completion](#key-completion)
 - [Highlights](#highlights)
 - [Writing patterns](#writing-patterns)
 - [Namespace bindings](#namespace-bindings)
@@ -32,7 +33,7 @@ A `preset` (in either layer) slots in underneath your own values, so the
 full order is **defaults ← preset ← `setup()` ← project file**.
 
 Lists replace, tables merge. A `patterns` list in the project file replaces
-the default list entirely; `hl`, `check`, `hover`, `jump` and `keymaps`
+the default list entirely; `hl`, `check`, `hover`, `jump`, `completion` and `keymaps`
 merge key by key.
 
 Two built-in defaults come from the plugin's first user and rarely fit
@@ -224,10 +225,42 @@ The same keys work in `setup()` and in the project file.
 | `extmark_priority` | `nil` | raise it if another plugin's virtual text draws over the value |
 | `debounce_ms` | `150` | delay between an edit and the refresh |
 | `max_filesize` | `1000000` | skip buffers larger than this many bytes |
+| `completion.lsp` | `false` | opt into the plugin's in-process LSP key completion client via `setup()` only (a project file cannot start it); use your LSP completion UI |
 | `check.extensions` | `{'cljs','cljc','clj'}` | file extensions `:I18nCheck` reads |
 | `check.exclude_dirs` | `{'.git','node_modules','target','.cpcache','dist','build','out','.next'}` | directories `:I18nCheck` skips. A name matches at any depth; an entry with a `/` is a path from the project root, like `src/generated` or `apps/*/dist`. A list replaces this one, so repeat the ones you keep. Folders with their own project file are always skipped |
 | `check.ignore` | `{}` | key globs whose absence isn't reported: missing keys, missing translations and unused keys (mismatches still are), e.g. `"templateVar.*"`. `*` matches any run of characters, dots included; `?` matches one |
 | `keymap` | `nil` | old name for `keymaps.hover` |
+
+## Key completion
+
+Use either `setup({ completion = { lsp = true } })` with your LSP completion
+UI, or register `module = 'i18n-inline.blink'` as a blink.cmp source with
+`completion.lsp` left off. The direct blink source has no required blink
+runtime dependency; see the [README example](../README.md#complete-translation-keys).
+Enabling both paths in blink's default sources duplicates results.
+
+Completion uses the current project's catalogs and `uses` mapping, and
+shows the preview language's translation when available. It recognizes
+the following **configured** React Intl patterns: a bound formatter's
+quoted key argument, `formatMessage({ id: 'full.key' })`, and
+`<FormattedMessage id="full.key" />` (including a multiline tag). The
+receiver must come from a literal `namespace_patterns` binding or an
+allowed `aliases` entry; an unrelated `foo('key')` gets no suggestions.
+For `useIntlFormatMessage('resident_portal.login')`, `t('user')` offers
+matching suffixes such as `username_label`; full-id/JSX calls offer full
+keys. A first array-destructured binding with a literal prefix is also
+supported when the project's `namespace_patterns` binds it. Accepting a
+suggestion replaces the key content through the closing quote.
+
+When several catalogs contain the same key, completion uses the first
+configured catalog's detail. That value can differ from the message chosen
+by a runtime provider merge.
+Arbitrary custom patterns are not converted into completion contexts. Later
+array-destructured formatters, object/dynamic prefixes, `{ key: 'other' }`,
+`{ useGlobal: true }` and `defineMessages` references are not supported.
+The LSP path returns no items for an empty full-id key until text is typed
+to avoid sending the entire catalog; the direct blink source may return
+all keys in that case. Completion reads catalogs but never edits them.
 
 ## Highlights
 

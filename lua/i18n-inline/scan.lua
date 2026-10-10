@@ -231,7 +231,7 @@ end
 -- Resolve the effective key for a match, or nil to drop the match.
 -- Receiver precedence: namespace binding first (it shadows aliases), then
 -- the alias list ('*' accepts any receiver).
-local function resolve_key(recv, sub, bindings, aliases, separator)
+function M.resolve_key(recv, sub, bindings, aliases, separator)
   if bindings and bindings[recv] ~= nil then
     local ns = bindings[recv]
     if ns == '' or ns == nil then
@@ -263,7 +263,7 @@ function M.scan(text, cfg)
       if c2 ~= nil then
         -- receiver + subkey form
         if c1 ~= nil and c2 ~= '' then
-          local key = resolve_key(c1, c2, bindings, aliases, sep)
+          local key = M.resolve_key(c1, c2, bindings, aliases, sep)
           if key then
             m = { key = key, receiver = c1, subkey = c2, call_s = s, call_e = e }
           end

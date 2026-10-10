@@ -139,6 +139,8 @@ local defaults = {
     max_height = 20,
     border = nil,
   },
+  -- Native in-process LSP completion is opt-in; blink can use its direct source instead.
+  completion = { lsp = false },
   -- Performance
   debounce_ms = 150,
   max_filesize = 1000000, -- skip buffers larger than this (bytes)
@@ -225,6 +227,7 @@ local schema = {
   hover = { fields = { max_len = 'number', width = 'number', max_height = 'number', border = 'any' } },
   debounce_ms = 'number',
   max_filesize = 'number',
+  completion = { fields = { lsp = 'boolean' } },
   check = { fields = { extensions = 'list', exclude_dirs = 'list', ignore = 'list' } },
 }
 
