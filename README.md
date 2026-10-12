@@ -125,6 +125,32 @@ configuring from memory or guessing.
 The recordings use the keys suggested in [Setup](#setup); the plugin maps
 nothing by default. Every action is also a command.
 
+### Complete translation keys
+
+Completion is optional. For native LSP completion, set `completion = { lsp = true }`
+in your plugin `opts` and use your normal LSP completion UI. For blink.cmp,
+leave `completion.lsp` off and register the direct source instead:
+
+```lua
+-- blink.cmp opts
+sources = {
+  default = { 'lsp', 'path', 'snippets', 'buffer', 'i18n_inline' },
+  providers = {
+    i18n_inline = { name = 'i18n-inline', module = 'i18n-inline.blink' },
+  },
+}
+```
+
+Don't use the direct blink source and the plugin's LSP client together if
+blink's `lsp` source is enabled: the keys will appear twice. Neither mode
+requires blink.cmp as a plugin dependency. Completion currently recognizes
+the configured React Intl call shapes described in
+[the configuration reference](docs/configuration.md#key-completion), including
+`useIntlFormatMessage('namespace')` calls like `t('key')`,
+`formatMessage({ id: 'full.key' })` and `<FormattedMessage id="full.key" />`.
+Other configured extraction patterns still work for previews, but may not
+support completion.
+
 ### Every language at a glance
 
 ![Opening the language popover on two calls in a TSX file.](assets/hover.gif)

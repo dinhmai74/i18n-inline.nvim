@@ -39,7 +39,7 @@ end
 
 ---@param opts table|nil setup options (see config.lua defaults)
 function M.setup(opts)
-  require('i18n-inline.config').setup(opts)
+  local cfg = require('i18n-inline.config').setup(opts)
   did_setup = true
   -- projects resolved so far were built from the previous options
   if package.loaded['i18n-inline.resolve'] then
@@ -53,6 +53,17 @@ function M.setup(opts)
   end
 
   local group = api.nvim_create_augroup('i18n-inline', { clear = true })
+  if package.loaded['i18n-inline.lsp'] then
+    require('i18n-inline.lsp').stop()
+  end
+  if cfg.completion.lsp then
+    api.nvim_create_autocmd({ 'FileType', 'BufReadPost' }, {
+      group = group,
+      callback = function(ev)
+        require('i18n-inline.lsp').start(ev.buf)
+      end,
+    })
+  end
 
   -- Buffer open/save/filetype settled -> refresh soon
   api.nvim_create_autocmd({ 'BufReadPost', 'BufWritePost', 'FileType' }, {
@@ -84,6 +95,9 @@ function M.setup(opts)
     callback = function(ev)
       require('i18n-inline.resolve').forget(ev.buf)
       preview().schedule(ev.buf)
+      if cfg.completion.lsp then
+        require('i18n-inline.lsp').start(ev.buf)
+      end
     end,
   })
 
@@ -102,6 +116,9 @@ function M.setup(opts)
   for _, buf in ipairs(api.nvim_list_bufs()) do
     if api.nvim_buf_is_loaded(buf) and vim.bo[buf].filetype ~= '' then
       preview().schedule(buf)
+      if cfg.completion.lsp then
+        require('i18n-inline.lsp').start(buf)
+      end
     end
   end
 
